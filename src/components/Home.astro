@@ -1,8 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import LetterGlitch from "./React/LetterGlitch.tsx";
 import LogoWall from "./LogoWall.astro";
 import SkillsList from "./React/SkillsList.tsx";
 import { t, profile, localizePath, type Locale } from "../lib/i18n";
+import portrait from "../assets/portrait.jpg";
 
 interface Props {
   locale?: Locale;
@@ -15,13 +17,18 @@ const hero = strings.hero;
 
 <section class="text-[var(--white)] mt-12 md:mt-0" id="home">
   <div class="max-w-5xl mx-auto space-y-8 md:py-36 pb-14">
-    <div class="text-start space-y-4">
+    <!-- DOM order keeps the text first so screen readers hear the name before
+         the image; `flex-col-reverse` is what puts the photo on top on mobile.
+         In RTL the `md:flex-row` mirrors on its own, no extra handling. -->
+    <div class="flex flex-col-reverse items-center gap-10 md:flex-row md:gap-12">
+    <div class="text-start space-y-4 w-full flex-1">
       <p class="text-md md:text-lg text-[var(--white-icon)] shiny-white">
         {hero.greeting}
       </p>
-      <div
-        class="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:gap-8 md:gap-4"
-      >
+      <!-- The h1 and tagline used to sit side by side at lg; the portrait
+           column takes that width now, and the tagline squeezed beside the
+           heading wrapped to six lines. Stacked, it holds three. -->
+      <div class="space-y-4">
         <!-- `text-pretty` is gone along with the size pair: it only affects how
              a line breaks, and `whitespace-nowrap` right next to it forbids
              breaking at all, so it could never have done anything here. -->
@@ -121,6 +128,33 @@ const hero = strings.hero;
             ></path>
           </svg>
         </a>
+      </div>
+    </div>
+
+      <!-- The 512x640 crop is the largest 4:5 the 640px-square source allows;
+           at the 256px display width that still leaves 2x for retina. Eager +
+           high priority because this sits above the fold and is the likely LCP.
+
+           The glow is a blurred disc of the accent color rather than a drop
+           shadow: on this background a shadow would be invisible. It sits on
+           the wrapper so the hover can brighten it while the photo itself
+           only sheds its slight desaturation. -->
+      <div class="group relative shrink-0">
+        <div
+          aria-hidden="true"
+          class="absolute -inset-8 rounded-full bg-[var(--sec)]/25 blur-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 motion-reduce:transition-none"
+        >
+        </div>
+        <Image
+          src={portrait}
+          alt={hero.photoAlt}
+          width={512}
+          height={640}
+          fit="cover"
+          loading="eager"
+          fetchpriority="high"
+          class="relative w-40 md:w-56 lg:w-64 h-auto rounded-3xl border border-[var(--surface-border)] grayscale-[35%] group-hover:grayscale-0 transition-[filter] duration-500 motion-reduce:transition-none"
+        />
       </div>
     </div>
 
