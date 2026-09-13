@@ -333,14 +333,20 @@ export function resolveProject<T extends ProjectLike>(project: T, locale: Locale
     return (faStr ? faStr : (en ?? null)) as string | null;
   };
 
-  const parseList = (raw: string | null): string[] => {
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.filter(Boolean).map(String) : [];
-    } catch {
-      return [];
-    }
+  /*
+    Lists arrive as real arrays from the content collection. They used to be
+    JSON encoded in a SQLite text column, which is why this ever needed parsing;
+    now it only has to drop empty entries.
+  */
+  const list = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter(Boolean).map(String) : [];
+
+  /* Persian list, falling back to the English one when it is empty. */
+  const pickList = (base: string): string[] => {
+    const en = list(project[base]);
+    if (locale === DEFAULT_LOCALE) return en;
+    const fa = list(project[`${base}Fa`]);
+    return fa.length ? fa : en;
   };
 
   return {
@@ -353,9 +359,9 @@ export function resolveProject<T extends ProjectLike>(project: T, locale: Locale
     architecture: pick('architecture'),
     challenges: pick('challenges'),
     results: pick('results'),
-    features: parseList(pick('features')),
-    // techStack is a list of product names — the same in both languages.
-    techStack: parseList((project.techStack ?? null) as string | null),
+    features: pickList('features'),
+    // techStack is a list of product names, the same in both languages.
+    techStack: list(project.techStack),
   };
 }
 

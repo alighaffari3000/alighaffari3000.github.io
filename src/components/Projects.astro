@@ -1,5 +1,5 @@
 ---
-import { db } from '../lib/db';
+import { getPublishedProjects, toProjectRecord } from '../lib/projects';
 import { t, localizePath, resolveProject, type Locale } from '../lib/i18n';
 
 interface Props {
@@ -19,12 +19,15 @@ const strings = t(locale);
 const Heading = `h${headingLevel}` as 'h1' | 'h2';
 const CardHeading = `h${headingLevel + 1}` as 'h2' | 'h3';
 
-const rows = await db.project.findMany({
-  where: { published: true },
-  orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
-  ...(limit ? { take: limit } : {}),
-});
-const projects = rows.map((row) => resolveProject(row, locale));
+/*
+  Read at build time from src/content/projects/, where a Prisma query used to
+  run on every request. `limit` is applied after sorting, so the home page shows
+  the first four in display order rather than an arbitrary four.
+*/
+const entries = await getPublishedProjects();
+const projects = (limit ? entries.slice(0, limit) : entries).map((entry) =>
+  resolveProject(toProjectRecord(entry), locale)
+);
 ---
 
 <!--
