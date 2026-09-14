@@ -1,277 +1,221 @@
-# PLAN — Portfolio + Project Case Studies
+# PLAN · Portfolio + Project Case Studies
 
 > معماری تأییدشده. پیاده‌سازی باید دقیقاً از این سند پیروی کند.
-> لیست تسک‌ها: [TASKS.md](TASKS.md) — پرامپت تحویل به توسعه‌دهنده: [PROMPT.md](PROMPT.md)
+> لیست کارها: [TASKS.md](TASKS.md) · پرامپت تحویل به توسعه‌دهنده: [PROMPT.md](PROMPT.md)
 
 ---
 
-## به‌روزرسانی — سایت دوزبانه شد
+## به‌روزرسانی ۲۰۲۶-۰۹-۱۳: سایت استاتیک شد
 
-پس از نگارش این سند، دو تصمیم جدید گرفته شد و پیاده‌سازی شد:
+تا این تاریخ سایت یک اپلیکیشن Astro SSR روی VPS اوبونتو بود: دیتابیس SQLite، پنل ادمین،
+هفت مسیر API، میدل‌ور نشست، و آپلود فایل روی دیسک. تصمیم گرفته شد میزبانی به **GitHub Pages**
+منتقل شود، و گیت‌هاب پیج فقط فایل سرو می‌کند و هیچ پروسه‌ای اجرا نمی‌کند. بنابراین:
 
-- **سایت دوزبانه است.** انگلیسی پیش‌فرض و روی `/`؛ فارسی روی `/fa` با `dir="rtl"` و فونت
-  محلی Vazirmatn. متن‌های ثابت رابط در `src/lib/i18n.ts` نگهداری می‌شوند.
-- **محتوای هر پروژه دوزبانه است.** هر فیلد قابل ترجمه یک ستون `*Fa` هم دارد
-  (`titleFa`، `problemFa` و…). اگر مقدار فارسی خالی باشد، نسخه انگلیسی در صفحه فارسی
-  رندر می‌شود — منطق در `resolveProject()` داخل `src/lib/i18n.ts`.
-- `slug`، `heroImage`، `githubUrl`، `demoUrl`، `published`، `order` و `techStack`
-  بین دو زبان مشترک‌اند؛ بنابراین `/projects/x` و `/fa/projects/x` یک رکورد واحدند.
+- ‏**پنل ادمین حذف شد.** دیگر افزودن پروژه بدون Rebuild ممکن نیست، و این یک بده‌بستان
+  آگاهانه است: در ازای حذف کامل سرور، هزینهٔ نگهداری و سطح حملهٔ سایت به صفر رسید.
+- ‏**دیتابیس حذف شد.** محتوای پروژه‌ها به فایل‌های Markdown در `src/content/projects/`
+  منتقل شد و با Content Collections و یک شمای Zod اعتبارسنجی می‌شود.
+- ‏**آپلود فایل حذف شد.** تصاویر مستقیماً داخل `public/` کامیت می‌شوند.
+- ‏**استقرار خودکار شد.** هر پوش روی `main` سایت را می‌سازد و منتشر می‌کند.
 
-بنابراین بخش ۵ (Database) و بخش ۸ (Routes) این سند با `prisma/schema.prisma` و
-`src/pages/` فعلی تکمیل شده‌اند.
+بخش‌هایی از این سند که به SSR، Prisma، auth و upload مربوط بودند بازنویسی شده‌اند.
+تاریخچهٔ آن معماری در گیت باقی است: کامیت `b49e6b0` آخرین وضعیت نسخهٔ سروری است.
 
-### دو نکته حیاتی که در عمل کشف شد
+### نکاتی که در عمل کشف شد و هنوز معتبرند
 
-1. **`security.allowedDomains` در `astro.config.mjs` اجباری است.** اگر خالی باشد، Astro
-   هر درخواست را `http://localhost` می‌بیند و بررسی CSRF داخلی‌اش **همه POSTهای فرمی —
-   از جمله تمام آپلودهای تصویر — را با ۴۰۳ رد می‌کند**. مقدار از `ALLOWED_HOSTS` خوانده
-   می‌شود و در **زمان build** اعمال می‌گردد.
-2. **ریست CSS باید داخل `@layer base` بماند.** در Tailwind v4، CSSِ بدون لایه بر
-   utilityهای لایه‌دار غلبه می‌کند؛ یک `* { padding: 0; margin: 0 }` بدون لایه، تمام
-   کلاس‌های padding و margin پروژه را از کار می‌اندازد.
+1. ‏**ریست CSS باید داخل `@layer base` بماند.** در Tailwind v4، CSSِ بدون لایه بر
+   utilityهای لایه‌دار غلبه می‌کند؛ یک ریست بدون لایه که margin و padding را صفر کند،
+   تمام کلاس‌های padding و margin پروژه را از کار می‌اندازد.
+2. ‏**فایل `public/.nojekyll` اجباری است.** گیت‌هاب پیج به‌صورت پیش‌فرض Jekyll اجرا می‌کند و
+   Jekyll هر پوشه‌ای که نامش با آندرلاین شروع شود را دور می‌ریزد؛ یعنی دقیقاً `_astro/` که
+   تمام CSS و جاوااسکریپت بیلدشده آنجاست. بدون این فایل سایت بدون استایل منتشر می‌شود.
+3. ‏**فیلد `slug` دیگر یک ستون نیست، نام فایل است.** تغییر نام فایل یعنی تغییر آدرس عمومی
+   صفحه. اگر صفحه‌ای جایی لینک شده، تغییر نامش لینک را می‌شکند.
 
-اجرای چک‌لیست تأیید: `node scripts/verify.mjs` (روی **بیلد production**، نه dev server).
+### نکته‌ای که دیگر معتبر نیست
+
+‏تنظیم `security.allowedDomains` در `astro.config.mjs` حذف شد. آن تنظیم فقط برای بررسی
+CSRF سمت سرور لازم بود و حالا هیچ فرمی POST نمی‌شود. اگر روزی سایت دوباره SSR شد، این
+تنظیم دوباره اجباری می‌شود، وگرنه Astro هر درخواست را روی `localhost` می‌بیند و تمام
+POSTهای فرمی را با ۴۰۳ رد می‌کند.
 
 ---
 
 ## ۱. Context
 
-هدف نهایی صرفاً یک Portfolio با کارت پروژه نیست؛ خروجی باید **Portfolio + Project Case Studies**
-باشد: هر پروژه یک صفحه کامل و قابل ارائه با Route مستقل (`/projects/[slug]`) دارد که همه بخش‌های
-آن (مسئله، راهکار، معماری، گالری، چالش‌ها و…) **اختیاری** هستند و فقط در صورت پر بودن رندر می‌شوند.
+خروجی صرفاً یک Portfolio با کارت پروژه نیست؛ باید **Portfolio + Project Case Studies**
+باشد: هر پروژه یک صفحهٔ کامل و قابل ارائه با Route مستقل (`/projects/[slug]`) دارد که همهٔ
+بخش‌های آن (مسئله، راهکار، معماری، گالری، چالش‌ها و…) **اختیاری** هستند و فقط در صورت پر
+بودن رندر می‌شوند.
 
-داده پروژه‌ها کاملاً از UI جدا است و از طریق یک **Admin Panel** در Database مدیریت می‌شود، طوری که
-افزودن پروژه جدید هیچ تغییری در کد کامپوننت‌ها لازم نداشته باشد و **بدون Rebuild** بلافاصله منتشر شود.
+سایت دوزبانه است: انگلیسی پیش‌فرض روی `/` و فارسی روی `/fa` با `dir="rtl"` و فونت محلی
+Vazirmatn. متن‌های ثابت رابط در `src/lib/i18n.ts` نگهداری می‌شوند.
 
-میزبانی روی یک **VPS اوبونتو** انجام می‌شود (نه هاست استاتیک)، بنابراین فایل‌سیستم پایدار و پروسه
-Node دائمی در دسترس است.
+محتوای پروژه‌ها از UI جدا است، ولی حالا در **فایل** زندگی می‌کند نه در دیتابیس. افزودن
+پروژهٔ جدید نیازی به تغییر کد کامپوننت‌ها ندارد؛ فقط یک فایل Markdown اضافه می‌شود.
 
-پایه Frontend: ریپوی [`Gothsec/Astro-portfolio`](https://github.com/Gothsec/Astro-portfolio)
-(Astro + React + TypeScript + TailwindCSS).
+میزبانی روی **GitHub Pages** است: هاست استاتیک، بدون فایل‌سیستم پایدار و بدون پروسهٔ Node.
+
+پایهٔ Frontend: ریپوی [`Gothsec/Astro-portfolio`](https://github.com/Gothsec/Astro-portfolio)
+‏(Astro + React + TypeScript + TailwindCSS).
 
 ---
 
 ## ۲. Stack
 
 ```
-Astro · React · TypeScript · Tailwind CSS
-@astrojs/node (SSR / standalone)
-Prisma · SQLite
-bcrypt
-PM2 · Nginx · Certbot
+Astro (static) · React · TypeScript · Tailwind CSS v4
+Astro Content Collections + Zod
+GitHub Actions · GitHub Pages
 ```
 
-**نباید اضافه شود:** Redis، PostgreSQL، Docker، سرویس API جدا، CMS، MDX،
-Rich Text Editor، جدول User، جدول Session، هر Abstraction غیرضروری.
+‏**نباید اضافه شود:** هیچ دیتابیسی، هیچ بک‌اند یا سرویس API، CMS، Rich Text Editor،
+Headless CMS ابری، سرویس احراز هویت، یا هر Abstraction غیرضروری. اگر قابلیتی به سرور نیاز
+داشت، یعنی در این معماری جا ندارد.
 
 ---
 
 ## ۳. معماری کلی
 
 ```
-                    Nginx
-                      │
-        ┌─────────────┴─────────────┐
-        │                           │
-        ▼                           ▼
-  Astro / Node (SSR)          /uploads/  (static)
-        │                           │
-  ┌─────┼─────┬──────────┐          ▼
-  ▼     ▼     ▼          ▼    /var/lib/portfolio/uploads/
-Website Projects Admin  API Routes
-                          │   (admin write/delete/upload only)
-                          ▼
-                       Prisma
-                          ▼
-                       SQLite
-                 /var/lib/portfolio/data.db
+   git push origin main
+            |
+            v
+   GitHub Actions  (.github/workflows/deploy.yml)
+            |
+     npm ci  ->  npm run build
+            |
+            v
+         dist/   ---------->   GitHub Pages
+                                     |
+                        alighaffari3000.github.io
+```
+
+در زمان بیلد:
+
+```
+src/content/projects/*.md
+            |
+    content.config.ts     اعتبارسنجی شمای Zod
+            |
+    lib/projects.ts       فیلتر published و ترتیب نمایش
+            |
+    lib/i18n.ts           انتخاب زبان و fallback به انگلیسی
+            |
+            v
+   HTML ثابت برای هر صفحه، در هر دو زبان
 ```
 
 قواعد معماری:
 
-- **یک اپلیکیشن Astro SSR**، بدون Backend جدا. صفحات public، صفحات پروژه، پنل ادمین و APIهای ادمین
-  همگی در همان پروسه Node اجرا می‌شوند.
-- `output: "server"` + `adapter: @astrojs/node` (standalone).
-- **صفحات public مستقیم Prisma را صدا می‌زنند** (SSR). هیچ API عمومی برای خواندن پروژه‌ها ساخته نمی‌شود.
-  مسیر `Browser → /projects/foo → /api/... → Prisma` صراحتاً ممنوع است؛ مسیر درست
-  `Browser → /projects/foo → Prisma → HTML` است.
-- API فقط برای عملیات **نوشتن / حذف / آپلود** ادمین لازم است.
+- ‏**هیچ کدی در زمان درخواست اجرا نمی‌شود.** هر چیزی که رندر می‌شود در زمان بیلد حساب شده.
+  تنها جاوااسکریپتی که در مرورگر اجرا می‌شود، سه جزیرهٔ React و اسکریپت‌های تعاملی UI است.
+- ‏**یک منبع حقیقت برای «کدام پروژه منتشر شده و با چه ترتیبی»:** تابع
+  `getPublishedProjects()` در `src/lib/projects.ts`. سه جا همین را می‌پرسند (شبکهٔ کارت‌ها و
+  دو مسیر Case Study). اگر هرکدام جداگانه فیلتر کنند، ممکن است پروژه‌ای در لیست بیاید که
+  صفحه‌ای پشتش ساخته نشده.
+- ‏**صفحهٔ انگلیسی و فارسی یک فایل محتوا را می‌خوانند.** آدرس `/projects/x` و
+  `/fa/projects/x` یک رکورد واحدند.
 
 ---
 
 ## ۴. ساختار فایل‌ها
 
 ```
-prisma/
-├── schema.prisma
-└── migrations/
+.github/workflows/
+└── deploy.yml            build و publish روی هر پوش به main
+public/
+├── .nojekyll             اجباری، بخش «نکات» بالا را بخوانید
+├── fonts/                فونت‌های محلی، بدون CDN
+└── projects/<slug>/      تصاویر هر پروژه
 src/
-├── Components/            # از پروژه پایه، سفارشی‌سازی می‌شود
-├── React/
+├── content/projects/     یک فایل Markdown به ازای هر Case Study
+│   └── example-project.md
+├── content.config.ts     شمای Zod همان فایل‌ها
+├── components/           سکشن‌های Astro
+│   └── React/            سه جزیره: LetterGlitch, SkillsList, LikeButton
 ├── layouts/
-│   └── Layout.astro
+│   └── Layout.astro      head، فونت، view transitions، skip link
 ├── lib/
-│   ├── db.ts              # Prisma Client singleton
-│   ├── auth.ts            # bcrypt + signed session cookie
-│   └── upload.ts          # validation / save / delete
-├── middleware.ts          # گارد /admin/* و /api/admin/*
-└── pages/
-    ├── index.astro
-    ├── projects/
-    │   ├── index.astro
-    │   └── [slug].astro
-    ├── admin/
-    │   ├── login.astro
-    │   ├── index.astro
-    │   └── projects/
-    │       ├── new.astro
-    │       └── [id]/
-    │           └── edit.astro
-    └── api/
-        └── admin/
-            ├── login.ts
-            ├── logout.ts
-            └── projects/
-                ├── index.ts
-                ├── [id].ts
-                └── [id]/
-                    ├── upload.ts
-                    └── gallery/
-                        └── [imageId].ts
-
-خارج از ریپو (persistent):
-/var/lib/portfolio/
-├── data.db
-└── uploads/projects/<project-id>/
-    ├── hero.webp
-    └── gallery/<generated-name>.webp
+│   ├── i18n.ts           مسیر زبان، متن‌های رابط، fallback فارسی به انگلیسی
+│   └── projects.ts       کدام پروژه منتشر شده و با چه ترتیبی
+├── pages/
+│   ├── index.astro
+│   ├── 404.astro
+│   ├── projects/
+│   │   ├── index.astro
+│   │   └── [slug].astro
+│   └── fa/               آینهٔ همان ساختار
+└── styles/global.css
 ```
+
+هیچ چیزی خارج از ریپو نگهداری نمی‌شود. کل سایت همین ریپو است.
 
 ---
 
-## ۵. Database
+## ۵. Content
 
-Prisma + SQLite.
+به‌جای دو جدول SQLite، یک کالکشن در `src/content.config.ts`:
 
-- **Production DB خارج از ریپو و خارج از `public/`:** `/var/lib/portfolio/data.db`
-- Development: `npx prisma migrate dev`
-- Production: `npx prisma migrate deploy` (هرگز `migrate dev` در production)
-
-```prisma
-model Project {
-  id           String   @id @default(cuid())
-  slug         String   @unique
-  title        String
-  summary      String?
-  heroImage    String?
-  description  String?
-  problem      String?
-  solution     String?
-  features     String?   // JSON array as string
-  techStack    String?   // JSON array as string
-  architecture String?
-  challenges   String?
-  results      String?
-  githubUrl    String?
-  demoUrl      String?
-  published    Boolean  @default(true)
-  order        Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  gallery      GalleryImage[]
-}
-
-model GalleryImage {
-  id        String  @id @default(cuid())
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  url       String
-  caption   String?
-  order     Int     @default(0)
-}
+```
+title, titleFa
+summary, summaryFa
+description, descriptionFa
+problem, problemFa
+solution, solutionFa
+architecture, architectureFa
+challenges, challengesFa
+results, resultsFa
+features: string[], featuresFa: string[]
+techStack: string[]          نام محصول، در هر دو زبان یکسان
+heroImage?: string
+gallery: { url, caption?, captionFa? }[]
+githubUrl?, demoUrl?
+published: boolean           پیش‌فرض true
+order: number                صعودی، پیش‌فرض 0
+date?: Date                  شکستن تساوی order، جدیدتر بالاتر
 ```
 
-- `features` و `techStack` به صورت **JSON string** ذخیره می‌شوند؛ به جدول جدا Normalize نمی‌شوند.
-  مثال: `["Authentication","RAG","Telegram Bot"]`
-- **Visibility فقط `published: Boolean`** — بدون draft / archived / scheduled / featured.
-- **Ordering فقط `order: Int`** — مرتب‌سازی با `order` و سپس یک کلید ثانویهٔ قطعی مثل `createdAt`.
-  Drag & Drop پیچیده لازم نیست مگر پیاده‌سازی‌اش بدیهی باشد.
+قواعد داده:
+
+- ‏**فیلد `slug` وجود ندارد؛ نام فایل همان slug است.** فایل `order-bot.md` روی
+  `/projects/order-bot` و `/fa/projects/order-bot` سرو می‌شود.
+- ‏**هر فیلد قابل ترجمه یک همتای `*Fa` دارد.** اگر مقدار فارسی خالی باشد، نسخهٔ انگلیسی در
+  صفحهٔ فارسی رندر می‌شود. منطق در `resolveProject()` داخل `src/lib/i18n.ts`.
+- ‏**لیست‌ها لیست واقعی YAML هستند.** در نسخهٔ SQLite رشتهٔ JSON بودند چون یک ستون متنی
+  آرایه نگه نمی‌داشت. حالا چیزی برای encode کردن نیست.
+- ‏**فیلد `techStack` همتای فارسی ندارد.** اینها نام محصول‌اند و در هر دو زبان لاتین می‌مانند.
+- ‏**مقدار `published: false` یعنی هیچ صفحه‌ای ساخته نمی‌شود** و پروژه از شبکهٔ کارت‌ها هم
+  حذف می‌شود. بدون draft و archived و scheduled و featured.
+- ‏**فایل `example-project.md` عمداً `published: false` است.** الگوی کپی‌کردنی است، و
+  علاوه بر آن نمی‌گذارد کالکشن خالی بماند؛ Astro برای کالکشن خالی روی هر مسیری که آن را
+  می‌خواند هشدار چاپ می‌کند.
 
 ---
 
-## ۶. Authentication
-
-دقیقاً **یک حساب ادمین**. **بدون جدول User. بدون جدول Session.**
-
-Environment variables:
+## ۶. Routes
 
 ```
-ADMIN_USERNAME
-ADMIN_PASSWORD_HASH     # bcrypt
-SESSION_SECRET
-DATABASE_URL
-UPLOADS_DIR
+/                       صفحهٔ اصلی انگلیسی
+/projects               لیست پروژه‌ها
+/projects/[slug]        Case Study
+/fa                     صفحهٔ اصلی فارسی
+/fa/projects
+/fa/projects/[slug]
+404.html                گیت‌هاب پیج خودش برای آدرس ناموجود سرو می‌کند
 ```
 
-- تأیید رمز با **bcrypt**.
-- پس از لاگین موفق، یک **signed HMAC session cookie** صادر می‌شود.
-- Payload شامل وضعیت authenticated و **timestamp انقضا**.
-- Cookie: `httpOnly` · `secure` در production · `sameSite=strict` · `max-age/expires` صریح.
-- طول عمر پیش‌فرض session: **۷ روز**.
-- Logout کوکی را پاک می‌کند.
-- مقایسه امضا باید constant-time باشد.
+هیچ مسیر ادمین و هیچ مسیر API وجود ندارد. هر دو مسیر `[slug]` از طریق `getStaticPaths()` و
+`getPublishedProjects()` ساخته می‌شوند، پس فهرست صفحه‌ها همیشه با فهرست کارت‌ها یکی است.
+
+slug ناموجود یا پروژهٔ unpublished اصلاً صفحه‌ای ندارد و میزبان استاتیک خودش `404.html` را
+برمی‌گرداند. این جایگزین منطق `Astro.rewrite('/404')` نسخهٔ سروری است.
 
 ---
 
-## ۷. Middleware
+## ۷. صفحهٔ Case Study
 
-دو رفتار **متفاوت**، این تمایز حیاتی است:
-
-| مسیر | حالت unauthenticated |
-|---|---|
-| `/admin/*` (به‌جز `/admin/login`) | `302` redirect به `/admin/login` |
-| `/api/admin/*` (به‌جز login) | `401` با بدنهٔ **JSON** |
-
-هرگز کلاینت API را به صفحهٔ HTML لاگین redirect نکنید.
-
----
-
-## ۸. Routes
-
-### Public
-
-```
-/
-/projects
-/projects/[slug]
-```
-
-### Admin (UI)
-
-```
-/admin/login
-/admin
-/admin/projects/new
-/admin/projects/[id]/edit
-```
-
-### API (فقط ادمین)
-
-```
-POST   /api/admin/login
-POST   /api/admin/logout
-POST   /api/admin/projects
-PUT    /api/admin/projects/:id
-DELETE /api/admin/projects/:id
-POST   /api/admin/projects/:id/upload
-DELETE /api/admin/projects/:id/gallery/:imageId
-```
-
----
-
-## ۹. صفحهٔ Case Study
-
-`/projects/[slug]` — Dynamic SSR route.
+`/projects/[slug]` و `/fa/projects/[slug]`، هر دو در زمان بیلد ساخته می‌شوند.
 
 بخش‌های ممکن (**همه اختیاری، فقط در صورت غیرخالی بودن رندر می‌شوند**):
 
@@ -282,150 +226,103 @@ Tech Stack · Challenges · Results · Gallery · GitHub · Demo
 
 قواعد رندر:
 
-- **بدون MDX. بدون Rich Text Editor.** در پنل ادمین از `textarea` معمولی استفاده می‌شود.
-- Line breakها به‌صورت امن حفظ می‌شوند.
-- **هرگز HTML دلخواه کاربر رندر نمی‌شود** (بدون `set:html` روی محتوای ورودی).
-- عنوان صفحه و meta description از داده‌های پروژه ساخته می‌شوند.
-- slug ناموجود یا پروژهٔ unpublished → `404`.
+- ‏**بدون MDX. بدون Rich Text Editor.** فیلدها متن ساده‌اند.
+- ‏**هرگز HTML دلخواه رندر نمی‌شود**، یعنی بدون `set:html` روی محتوای فایل‌ها.
+- ‏Line breakها به‌صورت امن حفظ می‌شوند.
+- عنوان صفحه و meta description از دادهٔ پروژه ساخته می‌شوند.
 
 ---
 
-## ۱۰. Admin Panel — قابلیت‌ها
+## ۸. تصاویر
+
+تصاویر داخل ریپو و زیر `public/` کامیت می‌شوند:
 
 ```
-list projects            create project           edit project
-delete project           publish / unpublish      set display order
-upload / replace hero    upload gallery images    delete gallery image
-reorder gallery images
+public/projects/<slug>/hero.webp
+public/projects/<slug>/01.webp
 ```
+
+و از ریشهٔ سایت ارجاع داده می‌شوند: `heroImage: /projects/<slug>/hero.webp`
+
+قواعد:
+
+- ‏**پوشه بر اساس slug است، نه id.** در نسخهٔ سروری عکس‌ها زیر `project id` بودند تا تغییر
+  slug فایل‌ها را نشکند. اینجا slug همان نام فایل محتواست، پس تغییر slug یعنی تغییر نام هر
+  دو با هم، و این یک عملیات گیت است نه یک مهاجرت داده.
+- ‏**فرمت‌های مجاز:** `jpg` و `png` و `webp`. ترجیح با `webp`.
+- ‏**بدون SVG.** یک SVG می‌تواند جاوااسکریپت داخلش داشته باشد، و اینجا هیچ اعتبارسنجی
+  سمت سروری باقی نمانده که جلویش را بگیرد.
+- ‏**حجم هر فایل زیر ۵۰۰ کیلوبایت نگه داشته شود.** اینها در گیت تاریخچه می‌سازند و
+  تاریخچهٔ گیت پاک نمی‌شود.
+- ‏فایل orphan دیگر مفهومی ندارد: حذف یک پروژه یعنی حذف فایل Markdown و پوشهٔ عکس‌هایش
+  در یک کامیت.
 
 ---
 
-## ۱۱. File Storage
+## ۹. Environment
 
-فایل‌های آپلودی **خارج از ریپو** ذخیره می‌شوند: `/var/lib/portfolio/uploads/`
+هیچ متغیر محیطی لازم نیست. سایت هیچ secret ندارد، چون هیچ چیزی برای محافظت باقی نمانده.
 
-**دایرکتوری فیزیکی بر اساس `project id` است، نه `slug`** — تا تغییر slug هیچ اثری روی فایل‌ها نگذارد:
-
-```
-/var/lib/portfolio/uploads/projects/<project-id>/
-├── hero.webp
-└── gallery/<generated-name>.webp
-```
-
-### Validation
-
-| مورد | مقدار |
-|---|---|
-| MIME مجاز | `image/jpeg`, `image/png`, `image/webp` |
-| پسوند مجاز | `jpg`, `jpeg`, `png`, `webp` |
-| رد می‌شود | **SVG**, **GIF** |
-| حداکثر حجم هر فایل | **5 MB** |
-| حداکثر تصاویر گالری هر پروژه | **30** |
-
-- از `await request.formData()` بومی استفاده کنید. **busboy اضافه نکنید** مگر اثبات شود FormData بومی کافی نیست.
-- نام فایل **سمت سرور** تولید می‌شود؛ به filename کلاینت هرگز اعتماد نکنید.
-- Path traversal باید مسدود شود (مسیر نهایی همیشه زیر `UPLOADS_DIR` بماند).
-
-### مقادیر داخل Database
-
-در DB **URL عمومی** ذخیره می‌شود، نه مسیر فایل‌سیستم:
-
-```
-/uploads/projects/<project-id>/hero.webp
-```
-
-مسیر فیزیکی یک نگرانی داخلی `lib/upload.ts` است و بیرون درز نمی‌کند.
-
-### Static serving
-
-تصاویر از داخل Astro proxy نمی‌شوند. **Nginx مسیر `/uploads/` را مستقیماً** از
-`/var/lib/portfolio/uploads/` سرو می‌کند.
-
-### File Lifecycle (بحرانی — فایل orphan نباید بماند)
-
-- **جایگزینی hero:** ذخیرهٔ فایل جدید → به‌روزرسانی DB → حذف فایل hero قبلی → مدیریت امن خطا.
-- **حذف تصویر گالری:** حذف فایل فیزیکی + حذف رکورد DB.
-- **حذف پروژه:** حذف کل دایرکتوری آپلود پروژه + حذف رکوردهای DB (gallery با cascade).
-- بین SQLite و فایل‌سیستم **تراکنش توزیع‌شده پیاده نکنید**؛ خطاهای فایل‌سیستم را واضح log کنید و
-  عملیات را تا حد عملی failure-safe نگه دارید.
+فایل‌های `.env` و `.env.example` نسخهٔ سروری حذف شدند. اگر `.env` قدیمی هنوز روی دیسک شماست،
+اعتبارنامه‌های ادمین داخلش دیگر به هیچ دردی نمی‌خورند.
 
 ---
 
-## ۱۲. Security Checklist
+## ۱۰. Deployment
 
-- احراز هویت در **هر** mutation ادمین بررسی شود.
-- `project id` پیش از عملیات DB اعتبارسنجی شود.
-- فرمت `slug` اعتبارسنجی شود.
-- نوع و حجم همهٔ فایل‌های آپلودی اعتبارسنجی شود.
-- Path traversal مسدود شود.
-- به filename کلاینت اعتماد نشود.
-- HTML دلخواه رندر نشود.
-- Secrets خارج از Git بمانند.
-- در production کوکی `secure` باشد.
+```
+git push origin main
+      |
+      v
+.github/workflows/deploy.yml
+      |  npm ci             دقیقاً همان چیزی که package-lock.json پین کرده
+      |  npm run build
+      |  upload dist/
+      v
+actions/deploy-pages
+```
+
+تنظیم یک‌بارهٔ ریپو: **Settings ← Pages ← Build and deployment ← Source: GitHub Actions**.
+تا وقتی این تنظیم نشده، ورک‌فلو بیلد می‌گیرد ولی مرحلهٔ انتشار شکست می‌خورد.
+
+نکات:
+
+- ‏تنظیم `concurrency: pages` با `cancel-in-progress: false` مانع مسابقهٔ دو انتشار همزمان
+  می‌شود. اجرای در حال انجام تمام می‌شود، تا سایتِ نیمه‌آپلودشده منتشر نشود.
+- ‏چون ریپو `alighaffari3000.github.io` نام دارد، سایت روی ریشهٔ دامنه است و به `base` نیاز
+  ندارد. اگر روزی به یک ریپوی معمولی منتقل شد، باید `base: '/<repo-name>'` در
+  `astro.config.mjs` تنظیم شود **و** تمام لینک‌های داخلی و مسیر تصاویر با
+  `import.meta.env.BASE_URL` پیشوند بگیرند.
+- ‏دامنهٔ اختصاصی: یک فایل `public/CNAME` با نام دامنه، به‌علاوهٔ رکوردهای DNS. مقدار `site`
+  در `astro.config.mjs` هم باید همان دامنه شود.
 
 ---
 
-## ۱۳. Environment (نمونه)
+## ۱۱. Verification
 
-```env
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH=$2b$...
-SESSION_SECRET=<random-32-bytes-hex>
-DATABASE_URL=file:/var/lib/portfolio/data.db
-UPLOADS_DIR=/var/lib/portfolio/uploads
-```
-
----
-
-## ۱۴. Deployment
-
-Ubuntu VPS · Node LTS · PM2 · Nginx · HTTPS via Certbot
-
-```
-build Astro SSR app
-prisma migrate deploy
-pm2 start (Node SSR server)
-pm2 startup                       # بقا پس از ریبوت
-nginx reverse proxy               # به پروسهٔ Node
-nginx static serving /uploads/    # از /var/lib/portfolio/uploads/
-database + uploads outside repo   # پایدار بین deployها
-```
-
----
-
-## ۱۵. Verification (۲۴ مورد)
+روی **بیلد production** اجرا شود (`npm run build` سپس `npm run preview`)، نه dev server.
 
 | # | مورد |
 |---|---|
-| 1 | `npm run build` موفق است |
-| 2 | صفحهٔ اصلی کار می‌کند |
-| 3 | `/projects` پروژه‌های published را لیست می‌کند |
-| 4 | `/projects/[slug]` مستقیم از SQLite می‌خواند |
-| 5 | فیلدهای خالی Case Study رندر نمی‌شوند |
-| 6 | ایجاد پروژه در ادمین بدون Rebuild فوراً قابل مشاهده است |
-| 7 | ویرایش پروژه فوراً خروجی public را به‌روز می‌کند |
-| 8 | پروژه‌های unpublished به‌صورت عمومی مخفی هستند |
-| 9 | `/admin` کاربر unauthenticated را به `/admin/login` redirect می‌کند |
-| 10 | `/api/admin/*` در حالت unauthenticated `401` JSON برمی‌گرداند |
-| 11 | لاگین نامعتبر رد می‌شود |
-| 12 | لاگین معتبر یک session cookie امضاشده و دارای انقضا می‌سازد |
-| 13 | sessionهای منقضی رد می‌شوند |
-| 14 | Logout سشن را پاک می‌کند |
-| 15 | فرمت‌های تصویر نامعتبر رد می‌شوند |
-| 16 | فایل‌های بزرگ‌تر از حد مجاز رد می‌شوند |
-| 17 | آپلود SVG و GIF رد می‌شود |
-| 18 | محدودیت تعداد تصاویر گالری اعمال می‌شود |
-| 19 | جایگزینی hero فایل فیزیکی قبلی را حذف می‌کند |
-| 20 | حذف تصویر گالری فایل فیزیکی آن را حذف می‌کند |
-| 21 | حذف پروژه دایرکتوری آپلود و رکوردهای DB را حذف می‌کند |
-| 22 | تغییر slug پروژه فایل‌ها را جابه‌جا یا خراب نمی‌کند |
-| 23 | URLهای عمومی تصاویر مستقیماً توسط Nginx سرو می‌شوند |
-| 24 | استقرار PM2 + Nginx پس از ریبوت VPS کار می‌کند |
+| 1 | ‏`npm run build` بدون خطا و بدون هشدار تمام می‌شود |
+| 2 | تعداد صفحه‌های ساخته‌شده درست است: ۵ صفحهٔ ثابت به‌علاوهٔ ۲ صفحه به ازای هر پروژهٔ منتشرشده |
+| 3 | صفحهٔ اصلی در هر دو زبان رندر می‌شود |
+| 4 | صفحهٔ فارسی `dir="rtl"` دارد و فونت Vazirmatn لود می‌شود |
+| 5 | ‏مسیر `/projects` فقط پروژه‌های `published` را لیست می‌کند |
+| 6 | هر کارت در شبکه یک صفحهٔ ساخته‌شده پشت خودش دارد |
+| 7 | فیلدهای خالی Case Study هیچ سکشن خالی‌ای رندر نمی‌کنند |
+| 8 | پروژه‌ای که فیلد فارسی ندارد، در صفحهٔ فارسی متن انگلیسی نشان می‌دهد نه جای خالی |
+| 9 | پروژه‌ای با `published: false` نه صفحه دارد نه در لیست می‌آید |
+| 10 | دکمهٔ تعویض زبان از هر صفحه به همتای همان صفحه می‌رود |
+| 11 | آدرس ناموجود صفحهٔ 404 را نشان می‌دهد |
+| 12 | کنسول مرورگر در هر سه صفحه خطایی ندارد |
+| 13 | ‏فایل `.nojekyll` در خروجی `dist/` هست |
+| 14 | سایت منتشرشده استایل دارد، یعنی پوشهٔ `_astro/` حذف نشده |
+| 15 | تصاویر روی سایت منتشرشده لود می‌شوند |
 
 ---
 
-## ۱۶. اصل راهنما
+## ۱۲. اصل راهنما
 
 > **Keep the implementation minimal and maintainable. Do not over-engineer.**
 > کوچک‌ترین معماری قابل اتکا که این نیازمندی‌ها را برآورده کند.

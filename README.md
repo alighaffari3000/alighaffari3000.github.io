@@ -45,7 +45,7 @@ GitHub Actions**. Until that is set, the workflow builds but the deploy step
 fails, because Pages is still waiting on a branch.
 
 `public/.nojekyll` is not optional. GitHub Pages runs Jekyll by default, and
-Jekyll drops directories whose name starts with an underscore — which is exactly
+Jekyll drops directories whose name starts with an underscore, which is exactly
 where Astro puts every hashed asset (`_astro/`). Without that file the site
 deploys with no CSS and no JavaScript.
 
