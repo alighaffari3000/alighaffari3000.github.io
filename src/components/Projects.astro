@@ -53,8 +53,11 @@ const projects = (limit ? entries.slice(0, limit) : entries).map((entry) =>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         {
           projects.map((project) => {
-            const statusText = project.demoUrl ? strings.projects.statusDeployed : strings.projects.statusInProgress;
-            const statusDotColor = project.demoUrl
+            /* Stated by the project, not guessed from whether it has a demo
+               link. See the `status` field in src/content.config.ts. */
+            const isDelivered = project.status === 'delivered';
+            const statusText = isDelivered ? strings.projects.statusDeployed : strings.projects.statusInProgress;
+            const statusDotColor = isDelivered
               ? "bg-[var(--status-live)]"
               : "bg-[var(--status-wip)]";
 

@@ -65,6 +65,19 @@ const projects = defineCollection({
     githubUrl: z.string().url().optional(),
     demoUrl: z.string().url().optional(),
 
+    /*
+      Shown as the badge on the project card.
+
+      Stated rather than inferred. The card used to read it off `demoUrl`, on
+      the assumption that a delivered project has a public demo, which is wrong
+      for most of this work: client systems, internal admin panels and Telegram
+      bots are all live and none of them has a URL a stranger can open. That
+      heuristic labelled every finished project "In development".
+
+      Defaults to delivered, because a portfolio lists work that is done.
+    */
+    status: z.enum(['delivered', 'in-progress']).default('delivered'),
+
     /* An unpublished project is skipped entirely: no page is built for it. */
     published: z.boolean().default(true),
     /* Ascending. Ties are broken by `date`, newest first. */

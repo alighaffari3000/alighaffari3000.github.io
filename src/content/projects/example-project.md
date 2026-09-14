@@ -59,6 +59,9 @@ gallery:
 githubUrl: https://github.com/alighaffari3000/order-bot
 demoUrl: https://example.com
 
+# delivered (the default) or in-progress. Drives the badge on the project card.
+status: delivered
+
 published: false
 order: 1
 date: 2026-09-13
