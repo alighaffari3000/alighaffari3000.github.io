@@ -55,7 +55,6 @@ export const ui = {
       stat: '30+ projects delivered',
       ctaWork: 'View my work',
       ctaContact: 'Get in touch',
-      photoAlt: 'Portrait of Ali Ghaffari',
     },
     services: {
       heading: 'What I do?',
@@ -184,7 +183,6 @@ export const ui = {
       stat: 'بیش از ۳۰ پروژه اجراشده',
       ctaWork: 'مشاهده پروژه‌ها',
       ctaContact: 'تماس با من',
-      photoAlt: 'پرتره علی غفاری',
     },
     services: {
       heading: 'چه کاری انجام می‌دهم؟',
