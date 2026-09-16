@@ -28,6 +28,15 @@ const entries = await getPublishedProjects();
 const projects = (limit ? entries.slice(0, limit) : entries).map((entry) =>
   resolveProject(toProjectRecord(entry), locale)
 );
+
+/*
+  The home page shows four of eight, and the only route to the rest was the
+  nav link at the top of the page — a visitor who had scrolled down to the
+  grid had nothing to click. The link below closes that, and appears only when
+  `limit` actually hid something: on /projects, which renders every entry, it
+  would lead back to the page it sits on.
+*/
+const hiddenCount = entries.length - projects.length;
 ---
 
 <!--
@@ -185,10 +194,59 @@ const projects = (limit ? entries.slice(0, limit) : entries).map((entry) =>
         }
       </div>
     )}
+
+    {hiddenCount > 0 && (
+      <div class="flex justify-center mt-12 reveal">
+        <a
+          href={localizePath('/projects', locale)}
+          class="group/all inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--surface)] border border-[var(--surface-border)] text-[var(--white)] font-semibold text-base hover:bg-[var(--white-icon-tr)] transition-colors"
+        >
+          {strings.projects.viewAll}
+          {/*
+            Mirrored and nudged in plain CSS rather than with Tailwind's `rtl:`
+            variant. Tailwind composes every transform utility into one
+            property in a fixed order, so `-scale-x-100` and `translate-x-1`
+            on the same element would flip the arrow but still nudge it to the
+            visual right — back into the label on the Persian pages.
+          */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+            class="view-all-arrow size-5 shrink-0"
+          >
+            <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+          </svg>
+        </a>
+      </div>
+    )}
   </div>
 </section>
 
 <style>
+  .view-all-arrow {
+    transition: transform 300ms ease;
+  }
+
+  :global([dir="rtl"]) .view-all-arrow {
+    transform: scaleX(-1);
+  }
+
+  .group\/all:hover .view-all-arrow {
+    transform: translateX(0.25rem);
+  }
+
+  :global([dir="rtl"]) .group\/all:hover .view-all-arrow {
+    transform: scaleX(-1) translateX(0.25rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view-all-arrow {
+      transition: none;
+    }
+  }
+
   /*
     A one-pixel accent border that lights up under the cursor.
 
